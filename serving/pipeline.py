@@ -60,6 +60,10 @@ class ServingPipeline:
             from config.constants import EOS_TOKEN_ID
 
             n_new = max_new_tokens if max_new_tokens is not None else self.inference_config.max_new_tokens
+            # Never generate past the model's context window
+            max_len = getattr(self.config, "max_seq_len", None)
+            if max_len is not None:
+                n_new = max(0, min(n_new, max_len - input_ids.size(1)))
             if hasattr(self.model, "eval"):
                 self.model.eval()
             with torch.no_grad():
